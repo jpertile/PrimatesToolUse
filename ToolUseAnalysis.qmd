@@ -6,3 +6,642 @@ editor: visual
 ---
 
 ## 
+
+```{r}
+#load packages
+library(tidyverse)
+library(tidymodels)
+library(knitr)
+library(ape)
+library(caper)
+library(phytools)
+library(nlme)
+library(gee)
+library(TreeTools)
+library(patchwork)
+library(phylolm)
+library(broom)
+library(readxl)
+
+#load data and phylogenetic tree
+tool_use_expanded <- read_xlsx(
+  "PrimateToolUseDataset.xlsx", sheet = "Dataset")
+tooluse.tree <- read.nexus("ToolUsePhylo54.nex")
+```
+
+
+```{r, message = F, warning=FALSE}
+#EDA
+set.seed(13)
+
+ggplot(tool_use_expanded, aes(x = Omnivore, y = Tool_Use)) +
+  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
+  labs(title = "Omnivory vs. Tool Use",
+       y = "Tool Use (1 = Yes, 0 = No)") + 
+  theme_minimal() 
+
+ggplot(tool_use_expanded, aes(x = Frugivore, y = Tool_Use)) +
+  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
+  labs(title = "Frugivory vs. Tool Use") + 
+  theme_minimal()
+
+ggplot(tool_use_expanded, aes(x = Folivore, y = Tool_Use)) +
+  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
+  labs(title = "Folivory vs. Tool Use") + 
+  theme_minimal()
+  
+ggplot(tool_use_expanded, aes(Dexterity_Index, Tool_Use)) +
+  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
+  labs(title = "Dexterity Index vs. Tool Use") + 
+  theme_minimal()
+
+ggplot(tool_use_expanded, aes(Brain_Weight_grams, Tool_Use)) +
+  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
+  labs(title = "Brain Weight vs. Tool Use")  +
+  scale_x_continuous(trans='log2') + 
+  theme_minimal()
+
+ggplot(tool_use_expanded, aes(Group_Size, Tool_Use)) +
+  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
+  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
+  labs(title = "Group Size vs. Tool Use")  +
+  scale_x_continuous(trans='log2') + 
+  theme_minimal()
+
+```
+
+```{r}
+#this ensures that phylogeny and data have species in the same order
+species <- tibble(TipLabels(tooluse.tree, single = TRUE)) |> 
+  rename("Species" = 1)
+
+tool_use_expanded2 <- merge(species, tool_use_expanded, sort = FALSE)
+
+#this turns dummy variables into factors
+tool_use_expanded2$Omnivore <- as.factor(tool_use_expanded2$Omnivore)
+tool_use_expanded2$Folivore <- as.factor(tool_use_expanded2$Folivore)
+tool_use_expanded2$Frugivore <- as.factor(tool_use_expanded2$Frugivore)
+```
+
+```{r}
+row.names(tool_use_expanded2) <- tool_use_expanded2$Species
+rownames(tool_use_expanded2) == tooluse.tree$tip.label
+#row names in the database matchup with tree tip labels ??
+```
+
+
+```{r}
+#this is the global model with all variables included
+set.seed(1)
+model <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached 
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+```
+
+#WARNING: the following code chunks will take a long time to run
+
+There are 63 different ways to include 6 different variables in the model.
+
+```{r}
+#modelito means little model 
+#modelitos do not include all the variables
+#there are 63 ways to choose which variables to include/exclude
+
+#excluding 1 variable
+
+modelito101 <- phyloglm(Tool_Use ~
+               log(Group_Size, 2) + Omnivore + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito102 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                Omnivore + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito103 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito104 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito105 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito106 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito107 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito108 <- phyloglm(Tool_Use ~
+              Omnivore + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito109 <- phyloglm(Tool_Use ~
+                Omnivore + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito110 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito111 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito112 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito113 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito114 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               + Omnivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito115 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               + Omnivore + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito116 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               + Omnivore + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito117 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito118 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito119 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito120 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito121 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito122 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2) + Omnivore + Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito123 <- phyloglm(Tool_Use ~ Folivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+         
+modelito124 <- phyloglm(Tool_Use ~ Omnivore + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+         
+modelito125 <- phyloglm(Tool_Use ~ Omnivore + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito126 <- phyloglm(Tool_Use ~ Omnivore + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito127 <- phyloglm(Tool_Use ~
+               log(Group_Size, 2) + Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito128 <- phyloglm(Tool_Use ~
+               log(Group_Size, 2) + Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito129 <- phyloglm(Tool_Use ~
+               log(Group_Size, 2) + Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito130 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito131 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito132 <- phyloglm(Tool_Use ~ 
+               log(Group_Size, 2) + Omnivore + Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito133 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Frugivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito134 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Folivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito135 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Folivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito136 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Omnivore + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito137 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Omnivore + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito138 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+                 Omnivore + Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito139 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2)  + Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito140 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2)  + Omnivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito141 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2)  + Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito142 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2)  + Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito143 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               log(Group_Size, 2),
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito144 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               Omnivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito145 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito146 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito147 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2) +
+               Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito148 <- phyloglm(Tool_Use ~ log(Group_Size, 2) +
+               Omnivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito149 <- phyloglm(Tool_Use ~ log(Group_Size, 2) +
+               Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito150 <- phyloglm(Tool_Use ~ log(Group_Size, 2) +
+               Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito151 <- phyloglm(Tool_Use ~ log(Group_Size, 2) +
+               Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito152 <- phyloglm(Tool_Use ~ Omnivore +
+               Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito153 <- phyloglm(Tool_Use ~ Omnivore +
+               Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito154 <- phyloglm(Tool_Use ~ Omnivore +
+               Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito155 <- phyloglm(Tool_Use ~ Folivore +
+               Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito156 <- phyloglm(Tool_Use ~ Dexterity_Index +
+               Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito157 <- phyloglm(Tool_Use ~ Frugivore +
+               Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito158 <- phyloglm(Tool_Use ~ log(Brain_Weight_grams, 2),
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito159 <- phyloglm(Tool_Use ~ log(Group_Size, 2),
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito160 <- phyloglm(Tool_Use ~ Omnivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito161 <- phyloglm(Tool_Use ~ Folivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito162 <- phyloglm(Tool_Use ~ Frugivore,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+
+modelito163 <- phyloglm(Tool_Use ~ Dexterity_Index,
+         data = tool_use_expanded2, 
+         phy = tooluse.tree, 
+         method = c("logistic_IG10"),
+         btol = 20, #the limit had been reached somewhere
+         log.alpha.bound = 8) #increased so alpha doesn't reach bound
+```
+
+```{r}
+a <- rbind(modelito101$aic) |> rbind(modelito102$aic) |> rbind(modelito103$aic) |> rbind(modelito104$aic) |> rbind(modelito105$aic) |> rbind(modelito106$aic) |> rbind(modelito107$aic) |> rbind(modelito108$aic) |> rbind(modelito109$aic) |> rbind(modelito110$aic) |> rbind(modelito111$aic) |> rbind(modelito112$aic) |> rbind(modelito113$aic) |> rbind(modelito114$aic) |> rbind(modelito115$aic) |> rbind(modelito116$aic) |> rbind(modelito117$aic) |> rbind(modelito118$aic) |> rbind(modelito119$aic) |> rbind(modelito120$aic) |> rbind(modelito121$aic) |> rbind(modelito122$aic) |> rbind(modelito123$aic) |> rbind(modelito124$aic) |> rbind(modelito125$aic) |> rbind(modelito126$aic) |> rbind(modelito127$aic) |> rbind(modelito128$aic) |> rbind(modelito129$aic) |> rbind(modelito130$aic) |> rbind(modelito131$aic) |> rbind(modelito132$aic) |> rbind(modelito133$aic) |> rbind(modelito134$aic) |> rbind(modelito135$aic) |> rbind(modelito136$aic) |> rbind(modelito137$aic) |> rbind(modelito138$aic) |> rbind(modelito139$aic) |> rbind(modelito140$aic) |> rbind(modelito141$aic) |> rbind(modelito142$aic) |> rbind(modelito143$aic) |> rbind(modelito144$aic) |> rbind(modelito145$aic) |> rbind(modelito146$aic) |> rbind(modelito147$aic) |> rbind(modelito148$aic) |> rbind(modelito149$aic) |> rbind(modelito150$aic) |> rbind(modelito151$aic) |> rbind(modelito152$aic) |> rbind(modelito153$aic) |> rbind(modelito154$aic) |> rbind(modelito155$aic) |> rbind(modelito156$aic) |> rbind(modelito157$aic) |> rbind(modelito158$aic) |> rbind(modelito159$aic) |> rbind(modelito160$aic) |> rbind(modelito161$aic) |> rbind(modelito162$aic) |> rbind(modelito163$aic) 
+
+min(a)
+a
+
+```
+
+
+```{r}
+#modelito 145 has the lowest AIC, so it is selected and presented
+set.seed(1)
+summary(modelito145)
+```
+
+Interpreting results:
+```{r}
+logodds_BW <- 0.59631
+odds_BW <- exp(logodds_BW)
+
+
+logodds_FO <- -1.61035
+odds_FO <- exp(logodds_FO)
+
+odds_BW
+odds_FO
+```
+
+Holding all other variables constant, we expect that, on average, every doubling in brain mass increases the odds of observed tool use behavior by a factor of 1.82. 
+
+Holding all other variables constant, we expect that, on average, the odds of observed tool use behavior in folivores is lower than in other primates by a factor of 0.200. 
+
