@@ -36,7 +36,7 @@ ggplot(tool_use_expanded, aes(x = Omnivore, y = Tool_Use)) +
   geom_smooth(method = glm, se = F, method.args = list(family="binomial")) + 
   labs(title = "Omnivory vs. Tool Use",
        y = "Tool Use (1 = Yes, 0 = No)",
-       x = "Omnivory (1 = Yes, 0 = No") + 
+       x = "Omnivory (1 = Yes, 0 = No)") + 
   theme_minimal() 
 
 ggplot(tool_use_expanded, aes(x = Frugivore, y = Tool_Use)) +
