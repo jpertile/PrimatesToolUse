@@ -5,8 +5,6 @@ format: pdf
 editor: visual
 ---
 
-## 
-
 ```{r}
 #load packages
 library(tidyverse)
@@ -24,56 +22,11 @@ library(broom)
 library(readxl)
 
 #load data and phylogenetic tree
-tool_use_expanded <- read_xlsx(
-  "PrimateToolUseDataset.xlsx", sheet = "Dataset")
+tool_use_expanded <- read_xlsx("PrimateToolUseDataset.xlsx", sheet = "Dataset")
 tooluse.tree <- read.nexus("ToolUsePhylo54.nex")
 ```
 
 
-```{r, message = F, warning=FALSE}
-#EDA
-set.seed(13)
-
-ggplot(tool_use_expanded, aes(x = Omnivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
-  labs(title = "Omnivory vs. Tool Use",
-       y = "Tool Use (1 = Yes, 0 = No)") + 
-  theme_minimal() 
-
-ggplot(tool_use_expanded, aes(x = Frugivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
-  labs(title = "Frugivory vs. Tool Use") + 
-  theme_minimal()
-
-ggplot(tool_use_expanded, aes(x = Folivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +
-  labs(title = "Folivory vs. Tool Use") + 
-  theme_minimal()
-  
-ggplot(tool_use_expanded, aes(Dexterity_Index, Tool_Use)) +
-  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
-  labs(title = "Dexterity Index vs. Tool Use") + 
-  theme_minimal()
-
-ggplot(tool_use_expanded, aes(Brain_Weight_grams, Tool_Use)) +
-  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
-  labs(title = "Brain Weight vs. Tool Use")  +
-  scale_x_continuous(trans='log2') + 
-  theme_minimal()
-
-ggplot(tool_use_expanded, aes(Group_Size, Tool_Use)) +
-  geom_point(aes(color = Taxon), size = 3, alpha = 0.5) +
-  geom_smooth(method = glm, se = F, method.args= list(family="binomial"))  +
-  labs(title = "Group Size vs. Tool Use")  +
-  scale_x_continuous(trans='log2') + 
-  theme_minimal()
-
-```
 
 ```{r}
 #this ensures that phylogeny and data have species in the same order
@@ -115,6 +68,7 @@ There are 63 different ways to include 6 different variables in the model.
 #modelito means little model 
 #modelitos do not include all the variables
 #there are 63 ways to choose which variables to include/exclude
+#so there are 63 modelitos
 
 #excluding 1 variable
 
