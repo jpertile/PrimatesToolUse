@@ -118,7 +118,7 @@ row.names(fmode) <- tool_use_expanded2$Species
 
 tool_use_expanded2$Species
 
-dotTree(tooluse.tree,a,colors=setNames(c("blue","red"), c("tool","no tool")),ftype="i",fsize=0.7)
+dotTree(tooluse.tree,a,colors=setNames(c("blue","red"), c("tool","no tool")),ftype="i",fsize=1)
 
 dotTree(tooluse.tree,as.factor(fmode),colors=setNames(c("blue","red"), c("tool","no tool")),ftype="i",fsize=0.7)
 ```
