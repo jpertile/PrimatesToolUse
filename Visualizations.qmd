@@ -31,7 +31,7 @@ tooluse.tree <- read.nexus("ToolUsePhylo54.nex")
 set.seed(13)
 
 ggplot(tool_use_expanded, aes(x = Omnivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, 
+  geom_jitter(width = 0.15, height = 0.15, 
               aes(color = Taxon), size = 3, alpha = 0.5) + 
   geom_smooth(method = glm, se = F, method.args = list(family="binomial")) + 
   labs(title = "Omnivory vs. Tool Use",
@@ -40,14 +40,14 @@ ggplot(tool_use_expanded, aes(x = Omnivore, y = Tool_Use)) +
   theme_minimal() 
 
 ggplot(tool_use_expanded, aes(x = Frugivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
+  geom_jitter(width = 0.15, height = 0.15, aes(color = Taxon), size = 3, alpha = 0.5) + 
   geom_smooth(method = glm, se = F, method.args= list(family="binomial")) + labs(title = "Frugivory vs. Tool Use",
        y = "Tool Use (1 = Yes, 0 = No)",
        x = "Frugivory (1 = Yes, 0 = No)") + 
   theme_minimal()
 
 ggplot(tool_use_expanded, aes(x = Folivore, y = Tool_Use)) +
-  geom_jitter(width = 0.2, height = 0.2, aes(color = Taxon), size = 3, alpha = 0.5) + 
+  geom_jitter(width = 0.15, height = 0.15, aes(color = Taxon), size = 3, alpha = 0.5) + 
   geom_smooth(method = glm, se = F, method.args= list(family="binomial")) +  labs(title = "Folivory vs. Tool Use",
        y = "Tool Use (1 = Yes, 0 = No)",
        x = "Folivory (1 = Yes, 0 = No)") + theme_minimal()
