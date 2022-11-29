@@ -78,3 +78,74 @@ ggplot(tool_use_expanded, aes(Group_Size, Tool_Use)) +
        x = "Average Group Size")  + 
   scale_x_continuous(trans='log2') + theme_minimal()
 ```
+
+
+#phylogeny
+
+```{r}
+#this ensures that phylogeny and data have species in the same order
+species <- tibble(TipLabels(tooluse.tree, single = TRUE)) |> 
+  rename("Species" = 1)
+
+tool_use_expanded2 <- merge(species, tool_use_expanded, sort = FALSE)
+
+#this turns dummy variables into factors
+tool_use_expanded2$Omnivore <- as.factor(tool_use_expanded2$Omnivore)
+tool_use_expanded2$Folivore <- as.factor(tool_use_expanded2$Folivore)
+tool_use_expanded2$Frugivore <- as.factor(tool_use_expanded2$Frugivore)
+tool_use_expanded2$Brain_Weight_grams <-
+  as.numeric(tool_use_expanded2$Brain_Weight_grams)
+
+tool_use_data_only <- tool_use_expanded2 |> dplyr::select(Species, Tool_Use, Brain_Weight_grams, Group_Size, Frugivore, Folivore, Omnivore, Dexterity_Index)
+
+row.names(tool_use_data_only) <- tool_use_data_only$Species 
+
+tool_use_data_only <- tool_use_data_only |> 
+  dplyr::select(Tool_Use, Brain_Weight_grams, Group_Size, Frugivore, Folivore, Omnivore, Dexterity_Index)
+
+```
+
+```{r}
+x <- as.matrix(tool_use_data_only[,1])
+
+a <- setNames(x , tool_use_expanded2$Species)
+row.names(a) <- tool_use_expanded2$Species 
+
+fmode<-as.matrix(setNames(tool_use_data_only[,as.factor(1)],
+                          rownames(tool_use_expanded2)))
+
+row.names(fmode) <- tool_use_expanded2$Species 
+
+tool_use_expanded2$Species
+
+dotTree(tooluse.tree,a,colors=setNames(c("blue","red"), c("tool","no tool")),ftype="i",fsize=0.7)
+
+dotTree(tooluse.tree,as.factor(fmode),colors=setNames(c("blue","red"), c("tool","no tool")),ftype="i",fsize=0.7)
+```
+
+
+
+```{r, eval = FALSE}
+b <- as.matrix(as.factor(a))
+row.names(b) <- tool_use_expanded2$Species 
+
+b <- tibble(b) |> mutate(Species = row.names(b))
+b$b <- as.numeric(b$b)
+row.names(b) <- tool_use_expanded2$Species 
+
+```
+
+
+```{r, eval = FALSE}
+tool.trees<-make.simmap(tooluse.tree,b,nsim=100)
+```
+
+```{r, message = FALSE, eval = FALSE}
+obj<-densityMap(tool.trees,states=
+                  c("No Tool Use","Tool Use"),plot=FALSE)
+```
+
+```{r, eval = FALSE}
+plot(obj,lwd=4,outline=TRUE,fsize=c(0.7,0.9),legend=50)
+```
+
