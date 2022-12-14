@@ -22,6 +22,7 @@ library(broom)
 library(readxl)
 library(rms)
 library(MuMIn)
+library(kableExtra)
 
 #load data and phylogenetic tree
 tool_use_expanded <- read_xlsx("PrimateToolUseDataset.xlsx", sheet = "Dataset")
@@ -235,48 +236,76 @@ modelito1 <- global_model
 
 ```{r}
 BW_avg <- coefficients(modelito1)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 1)$aic.weight + coefficients(modelito3)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 3)$aic.weight + coefficients(modelito4)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 4)$aic.weight + coefficients(modelito5)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 5)$aic.weight + coefficients(modelito9)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 9)$aic.weight + coefficients(modelito10)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 10)$aic.weight + coefficients(modelito11)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
-                         modelito_number == 11)$aic.weight + coefficients(modelito15)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 1)$aic.weight +
+  coefficients(modelito3)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 3)$aic.weight +
+  coefficients(modelito4)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 4)$aic.weight +
+  coefficients(modelito5)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 5)$aic.weight +
+  coefficients(modelito9)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 9)$aic.weight +
+  coefficients(modelito10)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 10)$aic.weight +
+  coefficients(modelito11)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
+                         modelito_number == 11)$aic.weight +
+  coefficients(modelito15)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
                          modelito_number == 15)$aic.weight
 ```
 ```{r}
 GS_avg <- coefficients(modelito1)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 1)$aic.weight + coefficients(modelito2)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 2)$aic.weight + coefficients(modelito4)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 4)$aic.weight + coefficients(modelito5)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 5)$aic.weight + coefficients(modelito7)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 7)$aic.weight + coefficients(modelito8)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 8)$aic.weight + coefficients(modelito11)[["log(Group_Size, 2)"]]*filter(aics, 
-                         modelito_number == 11)$aic.weight + coefficients(modelito14)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 1)$aic.weight +
+  coefficients(modelito2)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 2)$aic.weight +
+  coefficients(modelito4)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 4)$aic.weight +
+  coefficients(modelito5)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 5)$aic.weight +
+  coefficients(modelito7)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 7)$aic.weight +
+  coefficients(modelito8)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 8)$aic.weight +
+  coefficients(modelito11)[["log(Group_Size, 2)"]]*filter(aics, 
+                         modelito_number == 11)$aic.weight +
+  coefficients(modelito14)[["log(Group_Size, 2)"]]*filter(aics, 
                          modelito_number == 14)$aic.weight
 ```
 
 ```{r}
 EF_avg <- coefficients(modelito1)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 1)$aic.weight + coefficients(modelito2)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 2)$aic.weight + coefficients(modelito3)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 3)$aic.weight + coefficients(modelito5)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 5)$aic.weight + coefficients(modelito6)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 6)$aic.weight + coefficients(modelito8)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 8)$aic.weight + coefficients(modelito10)[["Extractive_Foraging"]]*filter(aics, 
-                         modelito_number == 10)$aic.weight + coefficients(modelito13)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 1)$aic.weight +
+  coefficients(modelito2)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 2)$aic.weight +
+  coefficients(modelito3)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 3)$aic.weight +
+  coefficients(modelito5)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 5)$aic.weight +
+  coefficients(modelito6)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 6)$aic.weight +
+  coefficients(modelito8)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 8)$aic.weight +
+  coefficients(modelito10)[["Extractive_Foraging"]]*filter(aics, 
+                         modelito_number == 10)$aic.weight +
+  coefficients(modelito13)[["Extractive_Foraging"]]*filter(aics, 
                          modelito_number == 2)$aic.weight
 ```
 
 ```{r}
 DI_avg <- coefficients(modelito1)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 1)$aic.weight + coefficients(modelito2)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 2)$aic.weight + coefficients(modelito3)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 3)$aic.weight + coefficients(modelito4)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 4)$aic.weight + coefficients(modelito6)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 6)$aic.weight + coefficients(modelito7)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 7)$aic.weight + coefficients(modelito9)[["Dexterity_Index"]]*filter(aics, 
-                         modelito_number == 9)$aic.weight + coefficients(modelito12)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 1)$aic.weight +
+  coefficients(modelito2)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 2)$aic.weight +
+  coefficients(modelito3)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 3)$aic.weight +
+  coefficients(modelito4)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 4)$aic.weight +
+  coefficients(modelito6)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 6)$aic.weight +
+  coefficients(modelito7)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 7)$aic.weight +
+  coefficients(modelito9)[["Dexterity_Index"]]*filter(aics, 
+                         modelito_number == 9)$aic.weight +
+  coefficients(modelito12)[["Dexterity_Index"]]*filter(aics, 
                          modelito_number == 12)$aic.weight 
 ```
 
@@ -296,7 +325,7 @@ Weighted_Model_pre <- variables |> cbind(estimates) |> rename(
 #calculate sum of weights for variables
 
 BW_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics, 
-                         modelito_number == 3)$aic.weight +filter(aics, 
+                         modelito_number == 3)$aic.weight + filter(aics, 
                          modelito_number == 4)$aic.weight + filter(aics, 
                          modelito_number == 5)$aic.weight + filter(aics, 
                          modelito_number == 9)$aic.weight + filter(aics, 
@@ -305,7 +334,7 @@ BW_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics,
                          modelito_number == 15)$aic.weight
 
 GS_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics, 
-                         modelito_number == 2)$aic.weight +filter(aics, 
+                         modelito_number == 2)$aic.weight + filter(aics, 
                          modelito_number == 4)$aic.weight + filter(aics, 
                          modelito_number == 5)$aic.weight + filter(aics, 
                          modelito_number == 7)$aic.weight + filter(aics, 
@@ -314,7 +343,7 @@ GS_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics,
                          modelito_number == 14)$aic.weight
 
 EF_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics, 
-                         modelito_number == 2)$aic.weight +filter(aics, 
+                         modelito_number == 2)$aic.weight + filter(aics, 
                          modelito_number == 3)$aic.weight + filter(aics, 
                          modelito_number == 5)$aic.weight + filter(aics, 
                          modelito_number == 6)$aic.weight + filter(aics, 
@@ -323,7 +352,7 @@ EF_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics,
                          modelito_number == 13)$aic.weight
 
 DI_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics, 
-                         modelito_number == 2)$aic.weight +filter(aics, 
+                         modelito_number == 2)$aic.weight + filter(aics, 
                          modelito_number == 3)$aic.weight + filter(aics, 
                          modelito_number == 4)$aic.weight + filter(aics, 
                          modelito_number == 6)$aic.weight + filter(aics, 
@@ -357,7 +386,8 @@ Weighted_Estimate_as_odds <- tibble(c(odds_BW, odds_GS, odds_EF, odds_DI)) |>
   rename(Weighted_Odds_Estimate = 1)
 Weighted_Model_post <- Weighted_Model |> cbind(Weighted_Estimate_as_odds) |>
   dplyr::select(1, 2, 4, 3)
-kable(Weighted_Model_post, digits = 3)
+kable(Weighted_Model_post, digits = 3) |> 
+  kable_styling(font_size = 7)
 ```
 
 Holding all other variables constant, we expect that, on average, with every doubling in brain mass the odds of observed tool use behavior is higher by a factor of 1.564. 
