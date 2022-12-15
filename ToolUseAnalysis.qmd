@@ -235,6 +235,40 @@ modelito1 <- global_model
 ```
 
 ```{r}
+INT_avg <- coefficients(modelito1)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 1)$aic.weight +
+  coefficients(modelito2)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 2)$aic.weight +
+  coefficients(modelito3)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 3)$aic.weight +
+  coefficients(modelito4)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 4)$aic.weight +
+  coefficients(modelito5)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 5)$aic.weight +
+  coefficients(modelito6)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 6)$aic.weight +
+  coefficients(modelito7)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 7)$aic.weight +
+  coefficients(modelito8)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 8)$aic.weight +
+  coefficients(modelito9)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 9)$aic.weight +
+  coefficients(modelito10)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 10)$aic.weight +
+  coefficients(modelito11)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 11)$aic.weight +
+  coefficients(modelito12)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 12)$aic.weight +
+  coefficients(modelito13)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 13)$aic.weight +
+  coefficients(modelito14)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 14)$aic.weight +
+  coefficients(modelito15)[["(Intercept)"]]*filter(aics, 
+                         modelito_number == 15)$aic.weight
+```
+
+
+```{r}
 BW_avg <- coefficients(modelito1)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
                          modelito_number == 1)$aic.weight +
   coefficients(modelito3)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
@@ -252,6 +286,7 @@ BW_avg <- coefficients(modelito1)[["log(Brain_Weight_grams, 2)"]]*filter(aics,
   coefficients(modelito15)[["log(Brain_Weight_grams, 2)"]]*filter(aics, 
                          modelito_number == 15)$aic.weight
 ```
+
 ```{r}
 GS_avg <- coefficients(modelito1)[["log(Group_Size, 2)"]]*filter(aics, 
                          modelito_number == 1)$aic.weight +
@@ -310,11 +345,11 @@ DI_avg <- coefficients(modelito1)[["Dexterity_Index"]]*filter(aics,
 ```
 
 ```{r}
-variables <- tibble(c("log(Brain_Weight_grams, 2)", "log(Group_Size, 2)",
+variables <- tibble(c("(Intercept)", "log(Brain_Weight_grams, 2)", "log(Group_Size, 2)",
   "Extractive_Foraging", "Dexterity_Index"))
 
-estimates <- tibble(BW_avg) |> rbind(GS_avg) |> rbind(EF_avg) |> rbind(DI_avg) |>
-  rename(Weighted_Estimate = BW_avg) 
+estimates <- tibble(INT_avg) |> rbind(BW_avg) |> rbind(GS_avg) |> rbind(EF_avg) |> rbind(DI_avg) |>
+  rename(Weighted_Estimate = 1) 
 
 Weighted_Model_pre <- variables |> cbind(estimates) |> rename(
   Variable = 1
@@ -323,6 +358,7 @@ Weighted_Model_pre <- variables |> cbind(estimates) |> rename(
 
 ```{r}
 #calculate sum of weights for variables
+INT_p <- NA
 
 BW_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics, 
                          modelito_number == 3)$aic.weight + filter(aics, 
@@ -359,14 +395,21 @@ DI_p <- filter(aics, modelito_number == 1)$aic.weight +filter(aics,
                          modelito_number == 7)$aic.weight + filter(aics, 
                          modelito_number == 9)$aic.weight + filter(aics, 
                          modelito_number == 12)$aic.weight
-Akaike_variable_weight <- c(BW_p, GS_p, EF_p, DI_p)
+Akaike_variable_weight <- c(INT_p, BW_p, GS_p, EF_p, DI_p)
 
 Weighted_Model <- Weighted_Model_pre |> cbind(Akaike_variable_weight) 
+```
+
+```{r}
+Weighted_Model
 ```
 
 
 Interpreting results:
 ```{r}
+logodds_INT <- -3.242
+odds_INT <- exp(logodds_INT)
+
 logodds_BW <- 0.447
 odds_BW <- exp(logodds_BW)
 
@@ -382,12 +425,13 @@ odds_EF <- exp(logodds_EF)
 logodds_DI <- -0.027
 odds_DI <- exp(logodds_DI)
 
-Weighted_Estimate_as_odds <- tibble(c(odds_BW, odds_GS, odds_EF, odds_DI)) |>
+Weighted_Estimate_as_odds <- tibble(c(odds_INT, odds_BW, 
+                                      odds_GS, odds_EF, odds_DI)) |>
   rename(Weighted_Odds_Estimate = 1)
-Weighted_Model_post <- Weighted_Model |> cbind(Weighted_Estimate_as_odds) |>
+Weighted_Model_post <- Weighted_Model |> cbind(Weighted_Estimate_as_odds)|>
   dplyr::select(1, 2, 4, 3)
-kable(Weighted_Model_post, digits = 3) |> 
-  kable_styling(font_size = 7)
+kable(Weighted_Model_post, digits = 3) |>
+  kable_styling(font_size = 10)
 ```
 
 Holding all other variables constant, we expect that, on average, with every doubling in brain mass the odds of observed tool use behavior is higher by a factor of 1.564. 
